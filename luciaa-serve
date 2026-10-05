@@ -373,7 +373,7 @@ cmd_key() {
         return 1
       fi
       ;;
-    status|*)
+    status)
       cur=$(read_key)
       case "$cur" in
         "") echo "key    : MISSING — no apiKey field in config" ;;
@@ -392,9 +392,8 @@ cmd_key() {
       esac
       echo "config : $CONFIG"
       echo "router : $base"
-      [ "$mode" != "status" ] && [ "$mode" != "" ] && {
-        echo "usage: luciaa-serve key [status|--auto|--manual]"; return 1; }
       ;;
+    *) echo "usage: luciaa-serve key [status|--auto|--manual]" ; return 1 ;;
   esac
 }
 
