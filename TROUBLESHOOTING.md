@@ -16,6 +16,9 @@ This document catalogs known issues, root causes, and verified resolutions encou
 6. [Git & Version Control Conflicts](#6-git--version-control-conflicts)
 7. [Installer Failures](#7-installer-failures)
 8. [Diagnostic Tooling](#8-diagnostic-tooling)
+9. [Escalation Matrix](#9-escalation-matrix)
+10. [Known Limitations (WONTFIX)](#10-known-limitations-wontfix)
+11. [Plugin Errors (opencode v2)](#11-plugin-errors-opencode-v2)
 
 ---
 
@@ -595,6 +598,83 @@ cat /tmp/luciaa-diagnostics.txt
 | Termux background kill | Android OS behavior | Watchdog + wake-lock + battery exclusion |
 | No GUI / web dashboard | Scope: CLI/TUI research tool | opencode TUI, 9router web UI |
 | Single-user config | Design: per-researcher isolation | Separate user accounts / containers |
+
+---
+
+## 11. Plugin Errors (opencode v2)
+
+### 11.1 `Server plugin error — Plugin: opencode-fallback@1.2.0 — failed`
+
+**Symptom**: On every opencode v2 boot the TUI paints a red banner:
+
+```
+Server plugin error
+Plugin: opencode-fallback@1.2.0
+Status: failed
+Runtime: server
+Error: Plugin must export a default definition with an id and an effect or setup function
+Reference: err_xxxxxxxx
+```
+
+**Root cause**: opencode v2 replaced the v1 plugin API. v1 plugins export
+`createPlugin(context) → Hooks`; v2 requires a default object shaped
+`{ id, setup(ctx) }`. The published npm package (`opencode-fallback@1.2.0`)
+still ships the v1 shape, so v2 refuses it at load time:
+
+```
+level=WARN message="failed to load plugin" target=opencode-fallback@1.2.0
+  cause="PluginModule.LoadError: Plugin must export a default definition with an
+  id and an effect or setup function. (cause: SchemaError(Expected object at
+  [\"default\"]))"
+```
+
+**Fix** (ships in the installer — re-run `install.sh`, or apply manually):
+
+```bash
+# 1. deploy the v2-native port (auto-discovered, no config entry needed)
+mkdir -p ~/.config/opencode/plugins
+cp <repo>/plugins/opencode-fallback.js ~/.config/opencode/plugins/
+
+# 2. remove the dead npm entry — delete the
+#    "plugin": ["opencode-fallback@1.2.0"] block from
+#    ~/.config/opencode/opencode.json
+#    or run:  luciaa-doctor --fix   (strips it automatically)
+```
+
+The config directory is watched — no restart needed; within seconds the server
+log shows the healthy load:
+
+```
+msg="loading plugin" id=~/.config/opencode/plugins/opencode-fallback.js
+```
+
+and `~/.local/share/opencode/log/fallback.log` gains a `PLUGIN STARTUP (v2 port)` line.
+
+**What the port does** (same feature set as the v1 package, minus the Ralph loop):
+
+- rate-limit recovery — a terminal failure matching `rateLimitPatterns` switches
+  the session to `fallbackModel` and re-prompts with the partial output
+  (or a continue-nudge if nothing was generated yet)
+- disconnect recovery — a terminal failure matching `disconnectPatterns`
+  re-prompts the same model (first attempt), escalating to `fallbackModel`
+  with exponential backoff on repeats
+- per-session guards: `cooldownMs` between fallback switches, `maxResumeAttempts`
+  cap on disconnect resumes, in-flight/debounce protection against prompt storms
+- config unchanged: `~/.config/opencode/fallback.json` (all v1 keys honored)
+
+**Verify**:
+
+```bash
+opencode plugin list
+# ID                  VERSION  SOURCE
+# free-model-rotator  local    /home/<user>/.config/opencode/plugins/free-model-rotator.js
+# opencode-fallback   local    /home/<user>/.config/opencode/plugins/opencode-fallback.js
+
+tail -3 ~/.local/share/opencode/log/fallback.log   # expect: PLUGIN STARTUP (v2 port)
+```
+
+If the red banner persists in an already-open TUI, restart the TUI — the
+server itself can stay up.
 
 ---
 

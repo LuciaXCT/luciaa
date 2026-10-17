@@ -238,6 +238,8 @@ luciaa/
 │   └── package.json        # 9router client deps
 ├── luciaa-serve            # 9router watchdog (Termux/Android)
 ├── luciaa-doctor           # Model health diagnostics
+├── plugins/
+│   └── opencode-fallback.js # v2-native rate-limit & disconnect recovery
 ├── luciaa-name             # Persona renaming utility
 ├── opencode-persona        # Custom persona authoring (opencode profile)
 ├── TROUBLESHOOTING.md      # Known issues & resolutions

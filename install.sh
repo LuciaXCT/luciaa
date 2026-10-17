@@ -1048,6 +1048,40 @@ if [ "$MODE" = "2" ] && [ -n "$ROUTER_URL" ]; then
 fi
 chmod 600 "$TARGET/opencode.json" 2>/dev/null
 
+# ─── opencode-fallback plugin (v2-native) ──────────────────────
+# v2 dropped the v1 plugin API — the npm package opencode-fallback@1.2.0
+# no longer loads ("Plugin must export a default definition...") and paints
+# a red "Server plugin error" banner on every boot. Ship the ported plugin
+# as a local file: ~/.config/opencode/plugins/ is auto-discovered.
+log "plugins" "installing opencode-fallback (rate-limit + disconnect recovery)"
+mkdir -p "$TARGET/plugins"
+if copy_from_src "plugins/opencode-fallback.js" "$TARGET/plugins/opencode-fallback.js" 644; then
+  ok "plugin: opencode-fallback (v2 native)"
+else
+  warn "plugin fetch failed — fallback/resume disabled until: cp <repo>/plugins/opencode-fallback.js $TARGET/plugins/"
+fi
+# sweep a stale v1 npm entry so the TUI stops showing the load failure
+if grep -q 'opencode-fallback@' "$TARGET/opencode.json" 2>/dev/null; then
+  if have node; then
+    node -e '
+      const fs = require("fs");
+      const p = process.argv[1];
+      const cfg = JSON.parse(fs.readFileSync(p, "utf8"));
+      let changed = false;
+      for (const k of ["plugin", "plugins"]) {
+        if (Array.isArray(cfg[k])) {
+          const kept = cfg[k].filter((e) => !(typeof e === "string" && e.startsWith("opencode-fallback@")));
+          if (kept.length !== cfg[k].length) { changed = true; kept.length ? (cfg[k] = kept) : delete cfg[k]; }
+        }
+      }
+      if (changed) fs.writeFileSync(p, JSON.stringify(cfg, null, 2) + "\n");
+      process.exit(changed ? 0 : 2);
+    ' "$TARGET/opencode.json" && ok "removed stale plugin entry (opencode-fallback@...)" || warn "stale plugin entry present — remove opencode-fallback@... from $TARGET/opencode.json"
+  else
+    warn "stale plugin entry present — remove opencode-fallback@... from $TARGET/opencode.json"
+  fi
+fi
+
 # persona.json
 cat > "$TARGET/persona.json" <<EOF
 { "name": "luciaa", "team": "luciaa", "address": "$USERNAME", "version": "2.2.0" }

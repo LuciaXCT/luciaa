@@ -43,6 +43,21 @@ if (legacyShadows.length) {
   console.log('    mv <file> <file>.retired');
 }
 
+// plugin hygiene — opencode v2 dropped the v1 plugin api; a stale npm entry
+// for opencode-fallback paints a red "Server plugin error" banner every boot.
+// the v2-native port auto-loads from ~/.config/opencode/plugins/ instead.
+const pluginLists = [cfg.plugin, cfg.plugins].filter(Array.isArray);
+const stalePlugin = pluginLists.some((l) => l.some((e) => typeof e === 'string' && e.startsWith('opencode-fallback@')));
+const localPlugin = path.join(path.dirname(CFG), 'plugins', 'opencode-fallback.js');
+if (stalePlugin) {
+  console.log('  ! config still lists the v1 npm plugin (opencode-fallback@...) — v2 cannot load it');
+  console.log('    fix: luciaa-doctor --fix   (strips it — the local v2 port is auto-discovered)');
+}
+if (!fs.existsSync(localPlugin)) {
+  console.log('  ! v2 fallback plugin missing: ' + localPlugin);
+  console.log('    fix: re-run install.sh   (deploys plugins/opencode-fallback.js)');
+}
+
 const prov = cfg.provider?.luciaa;
 if (!prov) {
   console.log('✗ no luciaa provider in config — run the installer');
@@ -125,16 +140,30 @@ const aliveIds = results.filter((r) => r.ok).map((r) => r.model);
 const currentResult = results.find((r) => r.model === current);
 
 if (process.argv.includes('--fix')) {
+  let changed = false;
+  // strip dead v1 npm plugin entries — v2 cannot load them and paints a red
+  // "Server plugin error" banner on every boot (the local v2 port replaces it)
+  for (const k of ['plugin', 'plugins']) {
+    if (Array.isArray(cfg[k])) {
+      const kept = cfg[k].filter((e) => !(typeof e === 'string' && e.startsWith('opencode-fallback@')));
+      if (kept.length !== cfg[k].length) {
+        changed = true;
+        kept.length ? (cfg[k] = kept) : delete cfg[k];
+        console.log('  fixed: removed stale plugin entry (v1 package cannot load on v2)');
+      }
+    }
+  }
   if (currentResult && currentResult.ok) {
-    console.log('  default is alive — nothing to fix');
+    if (!changed) console.log('  default is alive — nothing to fix');
   } else if (aliveIds.length) {
     cfg.agent.luciaa.model = 'luciaa/' + aliveIds[0];
     if (cfg.model !== undefined) cfg.model = 'luciaa/' + aliveIds[0];
-    fs.writeFileSync(CFG, JSON.stringify(cfg, null, 2));
+    changed = true;
     console.log('  fixed: default → luciaa/' + aliveIds[0] + ' — restart opencode');
   } else {
     console.log('  nothing alive — is the router up? run: 9router');
   }
+  if (changed) fs.writeFileSync(CFG, JSON.stringify(cfg, null, 2));
 } else if (currentResult && !currentResult.ok && aliveIds.length) {
   console.log('  default is DEAD — rerun with --fix to heal it');
 }
