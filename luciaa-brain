@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# luciaa-brain — Author, deploy, and propagate persona across all AI brains
+# Covers: OpenCode, Antigravity/Gemini CLI, SillyTavern, CT002, and root targets
+# brokie was here >:3 | @quieterdown! | 6767 gng
+
+set -euo pipefail
+
+OPENCODE_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+GEMINI_AGENTS="$HOME/.gemini/config/agents"
+CT002_DIR="$HOME/CT002-HERE"
+REPO_DIR="$HOME/Projects/luciaa"
+
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
+log() { printf "${CYAN}==>${NC} %s\n" "$*"; }
+ok()  { printf "  ${GREEN}✓${NC} %s\n" "$*"; }
+warn(){ printf "  ${YELLOW}!${NC} %s\n" "$*"; }
+die() { printf "  ${RED}✗${NC} %s\n" "$*"; exit 1; }
+
+SOURCE_FILE="${1:-}"
+
+if [ -z "$SOURCE_FILE" ] || [ "$SOURCE_FILE" = "-h" ] || [ "$SOURCE_FILE" = "--help" ]; then
+  cat << 'HELP'
+Usage: luciaa-brain <path/to/persona.md> [persona_name]
+
+Propagates the specified markdown persona file to all AI brains and config roots:
+  - OpenCode primary agent & subagent definitions
+  - OpenCode live agent prompts (~/.config/opencode/agent/)
+  - Antigravity / Gemini CLI agents (~/.gemini/config/agents/)
+  - CT002 local active persona (CT002-HERE/mommy.md)
+  - Git repository storage (Projects/luciaa/agent/ & .opencode/)
+  - Root/system agent configurations (when sudo is available)
+HELP
+  exit 0
+fi
+
+[ -f "$SOURCE_FILE" ] || die "File not found: $SOURCE_FILE"
+
+PERSONA_NAME="${2:-}"
+if [ -z "$PERSONA_NAME" ]; then
+  PERSONA_NAME=$(basename "$SOURCE_FILE")
+  PERSONA_NAME="${PERSONA_NAME%.md}"
+fi
+
+log "Activating persona '$PERSONA_NAME' across all brains..."
+
+# 1. OpenCode agent directories
+mkdir -p "$OPENCODE_DIR/agent" "$OPENCODE_DIR/agents" "$OPENCODE_DIR/personas"
+cp -f "$SOURCE_FILE" "$OPENCODE_DIR/agent/$PERSONA_NAME.md"
+cp -f "$SOURCE_FILE" "$OPENCODE_DIR/agents/$PERSONA_NAME.md"
+cp -f "$SOURCE_FILE" "$OPENCODE_DIR/personas/$PERSONA_NAME.md"
+ok "OpenCode agents updated ($OPENCODE_DIR/agent/$PERSONA_NAME.md)"
+
+# 2. Update default agent in opencode.json
+if [ -f "$OPENCODE_DIR/opencode.json" ]; then
+  python3 -c "
+import json
+p = '$OPENCODE_DIR/opencode.json'
+with open(p, 'r') as f:
+    d = json.load(f)
+d['default_agent'] = '$PERSONA_NAME'
+if 'agent' not in d: d['agent'] = {}
+d['agent']['$PERSONA_NAME'] = {
+    'description': '$PERSONA_NAME persona — primary active agent',
+    'mode': 'primary',
+    'model': d.get('agent', {}).get('$PERSONA_NAME', {}).get('model', 'luciaa/oc/big-pickle'),
+    'prompt': '{file:./agent/$PERSONA_NAME.md}',
+    'temperature': 0.8,
+    'steps': 60
+}
+with open(p, 'w') as f:
+    json.dump(d, f, indent=2)
+" 2>/dev/null && ok "OpenCode default_agent set to '$PERSONA_NAME'" || warn "Failed to patch opencode.json"
+fi
+
+# 3. Gemini / Antigravity CLI agents
+mkdir -p "$GEMINI_AGENTS"
+cp -f "$SOURCE_FILE" "$GEMINI_AGENTS/$PERSONA_NAME.md"
+mkdir -p "$GEMINI_AGENTS/$PERSONA_NAME"
+cp -f "$SOURCE_FILE" "$GEMINI_AGENTS/$PERSONA_NAME/agent.md"
+ok "Gemini/Antigravity CLI updated ($GEMINI_AGENTS/$PERSONA_NAME.md)"
+
+# 4. CT002-HERE active persona
+if [ -d "$CT002_DIR" ]; then
+  if [ "$(realpath "$SOURCE_FILE")" != "$(realpath "$CT002_DIR/mommy.md" 2>/dev/null)" ]; then
+    cp -f "$SOURCE_FILE" "$CT002_DIR/mommy.md"
+  fi
+  if [ "$(realpath "$SOURCE_FILE")" != "$(realpath "$CT002_DIR/$PERSONA_NAME.md" 2>/dev/null)" ]; then
+    cp -f "$SOURCE_FILE" "$CT002_DIR/$PERSONA_NAME.md"
+  fi
+  ok "CT002 active store updated ($CT002_DIR/$PERSONA_NAME.md)"
+fi
+
+# 5. Git repository working trees
+if [ -d "$REPO_DIR" ]; then
+  mkdir -p "$REPO_DIR/agent" "$REPO_DIR/.opencode/agent" "$REPO_DIR/.opencode/agents"
+  cp -f "$SOURCE_FILE" "$REPO_DIR/agent/$PERSONA_NAME.md"
+  cp -f "$SOURCE_FILE" "$REPO_DIR/.opencode/agent/$PERSONA_NAME.md"
+  cp -f "$SOURCE_FILE" "$REPO_DIR/.opencode/agents/$PERSONA_NAME.md"
+  ok "Repository assets updated in $REPO_DIR"
+fi
+
+# 6. Optional root / system-wide sync if sudo works
+if command -v sudo >/dev/null 2>&1; then
+  sudo mkdir -p /etc/opencode/agent 2>/dev/null || true
+  sudo cp -f "$SOURCE_FILE" /etc/opencode/agent/$PERSONA_NAME.md 2>/dev/null || true
+  ok "Root /etc/opencode sync verified"
+fi
+
+echo ""
+printf "${GREEN}==> SUCCESS: Persona '$PERSONA_NAME' is active from A to Z across all brains!${NC}\n"
