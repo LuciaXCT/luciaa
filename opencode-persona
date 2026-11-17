@@ -209,8 +209,29 @@ case "$CMD" in
     ;;
 
   use|apply)
-    if [ -n "${1:-}" ]; then apply_persona "$1"
-    else apply_persona "$(active_name)"; fi
+    arg="${1:-}"
+    if [ -n "$arg" ]; then
+      if [ -f "$arg" ]; then
+        pname=$(basename "$arg")
+        pname="${pname%.md}"
+        mkdir -p "$PERSONAS"
+        cp -f "$arg" "$PERSONAS/$pname.md"
+        apply_persona "$pname"
+      elif [ -f "$PWD/$arg" ]; then
+        pname=$(basename "$arg")
+        pname="${pname%.md}"
+        mkdir -p "$PERSONAS"
+        cp -f "$PWD/$arg" "$PERSONAS/$pname.md"
+        apply_persona "$pname"
+      elif [[ "$arg" == *.md ]] && [ -f "$PERSONAS/$arg" ]; then
+        pname="${arg%.md}"
+        apply_persona "$pname"
+      else
+        apply_persona "$arg"
+      fi
+    else
+      apply_persona "$(active_name)"
+    fi
     ;;
 
   add)
