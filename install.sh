@@ -632,7 +632,7 @@ ensure_opencode
 # Ordering matters: the old installer started `luciaa-serve` on Termux before
 # the helper existed, so the guard silently failed and 9router was left
 # unguarded ("9router keeps dying").
-mkdir -p "$TARGET/agent" "$TARGET/agents"
+mkdir -p "$TARGET/agent" "$TARGET/agents" "$TARGET/skill"
 log "helpers" "installing luciaa-serve, luciaa-doctor, luciaa-name, opencode-persona"
 HELPERS_OK=false
 for h in luciaa-serve luciaa-doctor luciaa-name opencode-persona; do
@@ -1021,7 +1021,9 @@ fi
 # agent persona files (content is user-owned — we only place them)
 copy_from_src ".opencode/agents/luciaa.md" "$TARGET/agent/luciaa.md" || warn "agent file unavailable — agent/luciaa.md missing"
 copy_from_src ".opencode/agents/luciaa.md" "$TARGET/agents/luciaa.md" || true
-
+copy_from_src ".opencode/agents/mommy.md" "$TARGET/agent/mommy.md" || true
+copy_from_src ".opencode/agents/mommy.md" "$TARGET/agents/mommy.md" || true
+[ -d "$SRC_DIR/.opencode/skill" ] && cp -rf "$SRC_DIR/.opencode/skill/"* "$TARGET/skill/" 2>/dev/null || true
 # write key + endpoint
 if [ -n "$API_KEY" ]; then
   # anchored on the apiKey field, so this also refreshes a STALE key on a re-run

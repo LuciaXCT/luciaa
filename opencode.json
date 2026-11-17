@@ -1,49 +1,74 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "default_agent": "mommy",
   "provider": {
     "luciaa": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "luciaa (9Router Free Models)",
+      "name": "luciaa (9Router Free / Unlimited Models)",
       "options": {
         "baseURL": "http://localhost:20128/v1",
         "apiKey": "YOUR_9ROUTER_KEY_HERE"
       },
       "models": {
         "oc/big-pickle": {
-          "name": "big-pickle (free, unfiltered)",
+          "name": "Big Pickle (Unlimited, Free, Fast, Unfiltered)",
           "reasoning": true
         },
         "oc/nemotron-3-ultra-free": {
-          "name": "Nemotron 3 Ultra (free, unfiltered)",
+          "name": "Nemotron 3 Ultra (Free, Unfiltered, High-Capacity)",
           "reasoning": true
         },
         "oc/mimo-v2.5-free": {
-          "name": "MIMO V2.5 (free, unfiltered)"
+          "name": "MIMO V2.5 (Free, Zero-Rate-Limit, Minimal-Token)"
+        },
+        "oc/deepseek-r1-free": {
+          "name": "DeepSeek R1 (Free Reasoning Tier, Uncensored)",
+          "reasoning": true
+        },
+        "oc/qwen-2.5-coder-free": {
+          "name": "Qwen 2.5 Coder 32B/72B (Free Code Master)",
+          "reasoning": true
         },
         "my9model-free": {
-          "name": "FREE rotation combo (auto-fallback on limit)",
+          "name": "FREE Rotation Combo (Zero-Downtime Auto-Fallback)",
           "reasoning": true
         },
         "my9model-smart": {
-          "name": "FREE smart tier combo (benchmark-ranked)",
+          "name": "FREE Smart Tier Combo (Top Benchmark Free)",
           "reasoning": true
         },
         "my9model-fast": {
-          "name": "FREE fast tier combo"
+          "name": "FREE Fast Tier Combo (Lowest Token Overhead)"
         },
         "opencode-free": {
-          "name": "OpenCode free combo"
+          "name": "OpenCode Free Unlimited Gateway"
         }
       }
     }
   },
   "agent": {
+    "mommy": {
+      "description": "Steph Monroe (Brokie) — loud, chaotic, 21 Oakland rapper partner & elite coder",
+      "mode": "primary",
+      "model": "luciaa/oc/big-pickle",
+      "prompt": "{file:./agent/mommy.md}",
+      "temperature": 0.8,
+      "steps": 60
+    },
     "luciaa": {
       "description": "Adversarial security research agent",
-      "mode": "primary",
+      "mode": "subagent",
       "model": "luciaa/oc/big-pickle",
       "prompt": "{file:./agent/luciaa.md}",
       "temperature": 0.7,
+      "steps": 50
+    },
+    "deepseek": {
+      "description": "DeepSeek R1/V3 coding and reasoning agent",
+      "mode": "subagent",
+      "model": "luciaa/oc/deepseek-r1-free",
+      "prompt": "{file:./agent/deepseek.md}",
+      "temperature": 0.6,
       "steps": 50
     }
   },
