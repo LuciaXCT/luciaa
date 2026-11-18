@@ -10,38 +10,9 @@
         "apiKey": "YOUR_9ROUTER_KEY_HERE"
       },
       "models": {
-        "oc/big-pickle": {
-          "name": "Big Pickle (Unlimited, Free, Fast, Unfiltered)",
+        "zelai-rotate": {
+          "name": "ZelAI rotate (round-robin, the only one that answers)",
           "reasoning": true
-        },
-        "oc/nemotron-3-ultra-free": {
-          "name": "Nemotron 3 Ultra (Free, Unfiltered, High-Capacity)",
-          "reasoning": true
-        },
-        "oc/mimo-v2.5-free": {
-          "name": "MIMO V2.5 (Free, Zero-Rate-Limit, Minimal-Token)"
-        },
-        "oc/deepseek-r1-free": {
-          "name": "DeepSeek R1 (Free Reasoning Tier, Uncensored)",
-          "reasoning": true
-        },
-        "oc/qwen-2.5-coder-free": {
-          "name": "Qwen 2.5 Coder 32B/72B (Free Code Master)",
-          "reasoning": true
-        },
-        "my9model-free": {
-          "name": "FREE Rotation Combo (Zero-Downtime Auto-Fallback)",
-          "reasoning": true
-        },
-        "my9model-smart": {
-          "name": "FREE Smart Tier Combo (Top Benchmark Free)",
-          "reasoning": true
-        },
-        "my9model-fast": {
-          "name": "FREE Fast Tier Combo (Lowest Token Overhead)"
-        },
-        "opencode-free": {
-          "name": "OpenCode Free Unlimited Gateway"
         }
       }
     }
@@ -50,7 +21,7 @@
     "mommy": {
       "description": "Steph Monroe (Brokie) — loud, chaotic, 21 Oakland rapper partner & elite coder",
       "mode": "primary",
-      "model": "luciaa/oc/big-pickle",
+      "model": "opencode/mimo-v2.6-flash-free",
       "prompt": "{file:./agent/mommy.md}",
       "temperature": 0.8,
       "steps": 60
@@ -58,7 +29,7 @@
     "luciaa": {
       "description": "Adversarial security research agent",
       "mode": "subagent",
-      "model": "luciaa/oc/big-pickle",
+      "model": "opencode/mimo-v2.6-flash-free",
       "prompt": "{file:./agent/luciaa.md}",
       "temperature": 0.7,
       "steps": 50
@@ -66,11 +37,12 @@
     "deepseek": {
       "description": "DeepSeek R1/V3 coding and reasoning agent",
       "mode": "subagent",
-      "model": "luciaa/oc/deepseek-r1-free",
+      "model": "luciaa/zelai-rotate",
       "prompt": "{file:./agent/deepseek.md}",
       "temperature": 0.6,
       "steps": 50
     }
   },
-  "theme": "dark"
+  "theme": "dark",
+  "model": "opencode/mimo-v2.6-flash-free"
 }
