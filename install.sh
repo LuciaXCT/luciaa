@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# luciaa — unfiltered opencode + 9router installer  (v2.2)
+# luciaa — unfiltered opencode + 9router installer  (v2.3)
 # Linux / macOS / Termux / WSL / VPS — portable, zero-friction, auto-heals
 #
 # Run:   bash <(curl -fsSL https://raw.githubusercontent.com/LuciaXCT/luciaa/main/install.sh)
@@ -370,7 +370,7 @@ cat <<'ART'
       ╚═══╝  ╚═╝  ╚═════╝ ╚═╝  ╚═══╝
 ART
 printf '%s\n' "$X"
-printf '%s   luciaa · unfiltered opencode + adult · v2.2%s\n\n' "$B" "$X"
+printf '%s   luciaa · unfiltered opencode + adult · v2.3%s\n\n' "$B" "$X"
 
 OS_LABEL="Linux"
 [ "$OS" = "mac" ] && OS_LABEL="macOS"
