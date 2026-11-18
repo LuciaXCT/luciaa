@@ -598,9 +598,9 @@ ensure_opencode() {
     official) install_opencode_official || warn "official installer failed" ;;
     auto)
       if [ "$IS_TERMUX" = true ]; then
-        # Try what upstream supports, then VERIFY. If the glibc build will not
-        # execute we say so instead of silently shipping a dead `opencode`.
-        install_opencode_official || warn "official installer failed"
+        # On Termux, upstream official binary throws 'Unsupported OpenTUI android-arm64'
+        # Automatically use the proven glibc route with bundled native OpenTUI
+        install_opencode_glibc || install_opencode_official || warn "opencode install failed"
       elif ask "opencode not found — install now?" Y; then
         install_opencode_official || die "opencode install failed — see https://opencode.ai/docs"
       else
