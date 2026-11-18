@@ -551,7 +551,7 @@ install_opencode_glibc() {
   local json urls url ver best="" bestv=""
   json="$(curl -fsSL --connect-timeout 10 -m 30 https://api.github.com/repos/Hope2333/opencode-termux/releases 2>/dev/null)" \
     || { warn "release API unreachable"; return 1; }
-  urls="$(printf '%s' "$json" | grep -o '"browser_download_url": *"[^"]*opencode-glibc_[^"]*_aarch64\.deb"' | sed 's/.*": *"//;s/"$//')"
+  urls="$(printf '%s' "$json" | grep -o '"browser_download_url": *"[^"]*opencode[-_][^"]*aarch64\.deb"' | sed 's/.*": *"//;s/"$//')"
   while IFS= read -r url; do
     [ -n "$url" ] || continue
     ver="$(printf '%s' "$url" | sed -n 's|.*opencode-glibc_\([0-9][0-9.]*\)_aarch64\.deb|\1|p')"
@@ -564,8 +564,8 @@ $urls
 EOF
   if [ -z "$best" ]; then
     warn "no glibc build found in the release list — using the known-good pin"
-    best="https://github.com/Hope2333/opencode-termux/releases/download/Push260828/opencode-glibc_1.18.15_aarch64.deb"
-    bestv="1.18.15"
+    best="https://github.com/Hope2333/opencode-termux/releases/download/Push261104/opencode_2.2.5-2_aarch64.deb"
+    bestv="2.2.5"
   fi
   ok "using opencode-glibc ${bestv}"
 
